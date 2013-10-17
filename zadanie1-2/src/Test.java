@@ -4,6 +4,7 @@ import java.util.List;
 
 public class Test {
 
+    boolean z = true;
     char c = 'x';
     byte b = 123;
     short s = 14567;
@@ -17,6 +18,7 @@ public class Test {
     
     public static void main(String[] args) {
         Test t = new Test();
+        dummy(t.z);
         dummy(t.c);
         dummy(t.b);
         dummy(t.s);
