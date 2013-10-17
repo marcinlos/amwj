@@ -7,11 +7,11 @@ import mlos.amw.util.TypeHelper;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.commons.InstructionAdapter;
 
-public class PrintMethodVisitor extends InstructionAdapter {
+public class PrintMethodCallVisitor extends InstructionAdapter {
     
     private final Printer printer;
     
-    public PrintMethodVisitor(MethodVisitor mv) {
+    public PrintMethodCallVisitor(MethodVisitor mv) {
         super(mv);
         this.printer = new Printer(mv);
     }
