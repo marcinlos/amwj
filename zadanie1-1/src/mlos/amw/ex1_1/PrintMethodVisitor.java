@@ -1,6 +1,8 @@
 package mlos.amw.ex1_1;
 
 import static org.objectweb.asm.Opcodes.INVOKESPECIAL;
+import mlos.amw.util.Printer;
+import mlos.amw.util.TypeHelper;
 
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.commons.InstructionAdapter;
@@ -16,18 +18,15 @@ public class PrintMethodVisitor extends InstructionAdapter {
 
     @Override
     public void visitMethodInsn(int opcode, String owner, String name, String desc) {
-        String fullName = name + desc;
-        
-        printer.syso("About to call " + fullName + "\n");
-        
-        // call the method
+        printer.print("About to call " + name + desc + "\n");
+
         mv.visitMethodInsn(opcode, owner, name, desc);
         
         if (opcode != INVOKESPECIAL) {
-            printer.syso("Got result ");
+            printer.print("Got result ");
             String returnedType = TypeHelper.getMethodType(desc);
             printer.printTopOfStack(returnedType);
-            printer.syso("\n");
+            printer.print("\n");
         }
     }
 

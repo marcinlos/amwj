@@ -1,4 +1,4 @@
-package mlos.amw.ex1_1;
+package mlos.amw.util;
 
 import static org.objectweb.asm.Opcodes.DUP;
 import static org.objectweb.asm.Opcodes.DUP2;

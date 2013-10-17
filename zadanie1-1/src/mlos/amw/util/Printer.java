@@ -1,4 +1,4 @@
-package mlos.amw.ex1_1;
+package mlos.amw.util;
 
 import static org.objectweb.asm.Opcodes.DUP;
 import static org.objectweb.asm.Opcodes.DUP2;
@@ -50,11 +50,10 @@ public class Printer {
                 "(Ljava/lang/Object;)V");
     }
 
-    public Printer syso(String string) {
+    public void print(String string) {
         pushSystemOut();
         pushConst(string);
         invokePrint();
-        return this;
     }
 
 }

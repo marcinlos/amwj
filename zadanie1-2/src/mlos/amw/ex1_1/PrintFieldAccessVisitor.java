@@ -1,6 +1,8 @@
 package mlos.amw.ex1_1;
 
 import static org.objectweb.asm.Opcodes.GETFIELD;
+import mlos.amw.util.Printer;
+import mlos.amw.util.TypeHelper;
 
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.commons.InstructionAdapter;
