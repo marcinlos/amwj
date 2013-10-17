@@ -3,7 +3,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 
-import mlos.amw.ex1_1.PrintFieldAccessVisitor;
+import mlos.amw.ex1_1.LogFieldAccess;
 
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
@@ -25,7 +25,7 @@ public class Transform {
         public MethodVisitor visitMethod(int acc, String name, String desc,
                 String sig, String[] ex) {
             MethodVisitor mv = cv.visitMethod(acc, name, desc, sig, ex);
-            return new PrintFieldAccessVisitor(mv);
+            return new LogFieldAccess(mv, acc, name, desc);
         }
         
     }
@@ -45,7 +45,6 @@ public class Transform {
     }
 
     public static void main(String[] args) throws IOException {
-//        String path = args[0];
         String input = "classes/Test.class";
         String output = "Test.class";
         run(input, output);

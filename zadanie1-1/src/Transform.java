@@ -3,7 +3,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 
-import mlos.amw.ex1_1.PrintMethodCallVisitor;
+import mlos.amw.ex1_1.LogMethodCalls;
 
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
@@ -22,10 +22,10 @@ public class Transform {
         }
         
         @Override
-        public MethodVisitor visitMethod(int access, String name, String desc,
+        public MethodVisitor visitMethod(int acc, String name, String desc,
                 String sig, String[] ex) {
-            MethodVisitor mv = cv.visitMethod(access, name, desc, sig, ex);
-            return new PrintMethodCallVisitor(mv);
+            MethodVisitor mv = cv.visitMethod(acc, name, desc, sig, ex);
+            return new LogMethodCalls(mv, acc, name, desc);
         }
 
     }
