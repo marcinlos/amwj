@@ -18,18 +18,16 @@ public class PrintFieldAccessVisitor extends InstructionAdapter {
     
     @Override
     public void visitFieldInsn(int opcode, String owner, String name, String desc) {
-        if (opcode == GETFIELD) {
+        mv.visitFieldInsn(opcode, owner, name, desc);
+        
+        if (opcode == GETFIELD && TypeHelper.isPrimitive(desc)) {
             String ownerClass = owner.replace('/', '.');
             String type = TypeHelper.prettyPrint(desc);
             
-            String tab = "    ";
             printer.println("Before getfield: " + ownerClass);
-            printer.println(tab + type);
-            printer.println(tab + name);
-            printer.print(tab);
-        }
-        mv.visitFieldInsn(opcode, owner, name, desc);
-        if (opcode == GETFIELD) {
+            printer.println("    " + type);
+            printer.println("    " + name);
+            printer.print("    ");
             printer.printTopOfStack(desc);
             printer.println("");
         }
