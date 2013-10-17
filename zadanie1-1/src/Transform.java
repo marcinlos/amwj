@@ -12,11 +12,12 @@ import org.objectweb.asm.ClassWriter;
 import com.google.common.io.Files;
 
 public class Transform {
+    
     private static void run(String input, String output) throws IOException {
         byte[] original = Files.toByteArray(new File(input));
         
         ClassReader reader = new ClassReader(original);
-        ClassWriter writer = new ClassWriter(0);
+        ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
         
         ClassVisitor transformer = new VerboseCalls(writer);
         reader.accept(transformer, 0);
@@ -28,7 +29,9 @@ public class Transform {
 
     public static void main(String[] args) throws IOException {
 //        String path = args[0];
-        run("classes/Test.class", "out.class");
+        String input = "classes/Test.class";
+        String output = "Test.class";
+        run(input, output);
     }
 
 }
