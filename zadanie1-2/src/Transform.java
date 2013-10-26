@@ -1,7 +1,8 @@
-import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 import mlos.amw.ex1_1.LogFieldAccess;
 
@@ -10,8 +11,6 @@ import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
-
-import com.google.common.io.Files;
 
 public class Transform {
     
@@ -31,7 +30,7 @@ public class Transform {
     }
     
     private static void run(String input, String output) throws IOException {
-        byte[] original = Files.toByteArray(new File(input));
+        byte[] original = Files.readAllBytes(Paths.get(input));
         
         ClassReader reader = new ClassReader(original);
         ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_FRAMES);

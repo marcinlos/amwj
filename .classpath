@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="zadanie1-1/src"/>
+	<classpathentry kind="src" path="zadanie1-2/src"/>
+	<classpathentry kind="lib" path="zadanie1-1/lib/asm-5.0_BETA.jar"/>
+	<classpathentry kind="lib" path="zadanie1-1/lib/asm-commons-5.0_BETA.jar"/>
+	<classpathentry kind="lib" path="zadanie1-1/lib/guava-15.0.jar"/>
+	<classpathentry kind="lib" path="zadanie1-2/lib/asm-5.0_BETA.jar"/>
+	<classpathentry kind="lib" path="zadanie1-2/lib/asm-commons-5.0_BETA.jar"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="output" path="zadanie1-2/classes"/>
+</classpath>
