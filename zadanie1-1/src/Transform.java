@@ -1,8 +1,8 @@
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 
 import mlos.amw.ex1_1.LogMethodCalls;
 
@@ -30,24 +30,20 @@ public class Transform {
     }
     
     private static void run(String input, String output) throws IOException {
-        byte[] original = Files.readAllBytes(Paths.get(input));
-        
-        ClassReader reader = new ClassReader(original);
+        ClassReader reader = new ClassReader(new FileInputStream(input));
         ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
-        new ClassVisitor(0, writer) {
-        };
         ClassVisitor transformer = new Visitor(writer);
-        reader.accept(transformer, 0);
+        reader.accept(transformer, ClassReader.EXPAND_FRAMES);
         
-        try (OutputStream out = new FileOutputStream(output)) {
-            out.write(writer.toByteArray());
-        }
+        OutputStream ostream = new FileOutputStream(output);
+        ostream.write(writer.toByteArray());
+        ostream.close();
     }
 
     public static void main(String[] args) throws IOException {
-//        String path = args[0];
-        String input = "classes/Test.class";
-        String output = "Test.class";
+        String path = new File("classes", args[0]).getPath();
+        String input = path;
+        String output = path;
         run(input, output);
     }
 

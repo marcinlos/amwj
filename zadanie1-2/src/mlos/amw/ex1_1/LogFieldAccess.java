@@ -17,10 +17,9 @@ public class LogFieldAccess extends Printer {
         
         Type type = Type.getType(desc);
         if (opcode == GETFIELD && isPrimitive(type)) {
-            System.out.println(type);
             Type ownerType = Type.getObjectType(owner);
 
-            print("Before getfield: " + ownerType.getClassName() + "\n");
+            print("Before getfield:\n    " + ownerType.getClassName() + "\n");
             print("    " + type.getClassName() + "\n");
             print("    " + name + "\n");
             print("    ");

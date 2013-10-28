@@ -18,7 +18,7 @@ public class OpcodeSummary implements Runnable {
 
         @Override
         public int compareTo(OpcodeStat o) {
-            return -Integer.compare(count, o.count);
+            return count == o.count ? 0 : count < o.count ? 1 : -1;
         }
     }
 

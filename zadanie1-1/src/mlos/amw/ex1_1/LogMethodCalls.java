@@ -20,7 +20,9 @@ public class LogMethodCalls extends Printer {
         if (opcode != INVOKESPECIAL) {
             print("Got result ");
             Type retType = Type.getMethodType(desc).getReturnType();
-            printStackTop(retType);
+            if (retType.getSort() != Type.VOID) {
+                printStackTop(retType);
+            }
             print("\n");
         }
     }

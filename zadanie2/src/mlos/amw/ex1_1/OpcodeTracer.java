@@ -21,6 +21,8 @@ public final class OpcodeTracer extends StaticInitMerger {
     private static final String PREFIX = "__static_init#";
     
     private Type visitedClass;
+    
+    private boolean firstMethodVisit = true;
 
     public OpcodeTracer(ClassVisitor sink) {
         super(Opcodes.ASM5, PREFIX, sink);
@@ -36,21 +38,18 @@ public final class OpcodeTracer extends StaticInitMerger {
     @Override
     public MethodVisitor visitMethod(int acc, String name, String desc,
             String sig, String[] ex) {
+        if (firstMethodVisit) {
+            firstMethodVisit = false;
+            createHistogram();
+            initHistogram();
+            createIncMethod();
+        }
         MethodVisitor mv = super.visitMethod(acc, name, desc, sig, ex);
         if (name.equals("<init>") || name.equals("<clinit>")) {
             return mv;
         } else {
             return new OpcodeTracerMV(visitedClass, mv, acc, name, desc);
         }
-    }
-
-    @Override
-    public void visitEnd() {
-        createHistogram();
-        initHistogram();
-        createIncMethod();
-        
-        super.visitEnd();
     }
 
     private void createIncMethod() {
