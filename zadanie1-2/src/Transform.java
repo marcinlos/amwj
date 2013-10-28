@@ -42,9 +42,7 @@ public class Transform {
 
     public static void main(String[] args) throws IOException {
         String path = args[0];
-        String input = path;
-        String output = path;
-        run(input, output);
+        run(path, path);
     }
 
 }

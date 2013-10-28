@@ -1,3 +1,4 @@
+package mlos.amw.ex1_1;
 import java.util.Arrays;
 
 import org.objectweb.asm.util.Printer;

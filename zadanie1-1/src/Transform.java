@@ -1,4 +1,3 @@
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -41,10 +40,8 @@ public class Transform {
     }
 
     public static void main(String[] args) throws IOException {
-        String path = new File("classes", args[0]).getPath();
-        String input = path;
-        String output = path;
-        run(input, output);
+        String path = args[0];
+        run(path, path);
     }
 
 }
