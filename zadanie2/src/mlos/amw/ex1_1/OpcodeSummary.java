@@ -1,47 +1,34 @@
 package mlos.amw.ex1_1;
-import java.util.Arrays;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.TreeMap;
 
 import org.objectweb.asm.util.Printer;
 
 
 public class OpcodeSummary implements Runnable {
     
-    private final int[] stats;
+    private static final int[] stats = new int[256];
     
-    private static class OpcodeStat implements Comparable<OpcodeStat> {
-        public final int opcode;
-        public final int count;
-        
-        public OpcodeStat(int opcode, int count) {
-            this.opcode = opcode;
-            this.count = count;
-        }
-
-        @Override
-        public int compareTo(OpcodeStat o) {
-            return count == o.count ? 0 : count < o.count ? 1 : -1;
-        }
+    static {
+        Runtime.getRuntime().addShutdownHook(new Thread(new OpcodeSummary()));
     }
-
-    public OpcodeSummary(int[] stats) {
-        this.stats = stats;
-    }
-
+    
     @Override
     public void run() {
-        int N = 256;
-        OpcodeStat[] all = new OpcodeStat[N];
-        for (int i = 0; i < N; ++ i) {
-            OpcodeStat stat = new OpcodeStat(i, stats[i]);
-            all[i] = stat;
+        Map<String, Integer> counts = new TreeMap<String, Integer>();
+        for (int i = 0; i < stats.length; ++ i) {
+            if (stats[i] > 4) {
+                counts.put(Printer.OPCODES[i], stats[i]);
+            }
         }
-        Arrays.sort(all);
-        int i = 0;
-        while (i < N && all[i].count > 0) {
-            OpcodeStat item = all[i++];
-            String opcode = Printer.OPCODES[item.opcode];
-            System.out.printf("%s    %d\n", opcode, item.count);
+        for (Entry<String, Integer> e : counts.entrySet()) {
+            System.out.printf("%s    %d\n", e.getKey(), e.getValue());
         }
+    }
+    
+    public static void increment(int opcode) {
+        ++ stats[opcode];
     }
 
 }
