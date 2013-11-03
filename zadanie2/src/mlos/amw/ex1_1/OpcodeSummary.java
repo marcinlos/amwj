@@ -5,7 +5,6 @@ import java.util.TreeMap;
 
 import org.objectweb.asm.util.Printer;
 
-
 public class OpcodeSummary implements Runnable {
     
     private static final int[] stats = new int[256];
@@ -18,7 +17,7 @@ public class OpcodeSummary implements Runnable {
     public void run() {
         Map<String, Integer> counts = new TreeMap<String, Integer>();
         for (int i = 0; i < stats.length; ++ i) {
-            if (stats[i] > 4) {
+            if (stats[i] >= 3) {
                 counts.put(Printer.OPCODES[i], stats[i]);
             }
         }
