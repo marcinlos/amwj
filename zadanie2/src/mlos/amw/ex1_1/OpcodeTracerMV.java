@@ -19,8 +19,12 @@ public class OpcodeTracerMV extends GeneratorAdapter {
     private static final Method incrementor = Method
             .getMethod("void increment (int)");
 
-    public OpcodeTracerMV(MethodVisitor mv, int acc, String name, String desc) {
+    private final String className;
+
+    public OpcodeTracerMV(MethodVisitor mv, String className, int acc,
+            String name, String desc) {
         super(mv, acc, name, desc);
+        this.className = className;
     }
 
     @Override
@@ -76,7 +80,9 @@ public class OpcodeTracerMV extends GeneratorAdapter {
     @Override
     public void visitMethodInsn(int opcode, String owner, String name,
             String desc) {
-        incrementUsage(opcode);
+        if (owner.equals(className)) {
+            incrementUsage(opcode);
+        }
         super.visitMethodInsn(opcode, owner, name, desc);
     }
 

@@ -24,9 +24,7 @@ public class Transform {
     }
 
     public static void main(String[] args) throws IOException {
-        String input = "classes/Test.class";
-        String output = "Test.class";
-        run(input, output);
+        run(args[0], args[0]);
     }
 
 }
