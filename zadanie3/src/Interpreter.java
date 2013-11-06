@@ -4,36 +4,17 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 
+import mlos.amw.npj.VM;
 import mlos.amw.npj.ast.Statement;
 import mlos.amw.npj.parser.NPJParser;
 
 public class Interpreter {
 
     private static final int DEFAULT_HEAP = 32;
+    private static final String HEAP_SIZE_PROPERTY = "npj.heap.size";
 
-    private int[] heap;
-    private int maxHeapSize;
-    private int heapSize;
-
-    private List<Statement> program;
-
-    /**
-     * Initializes Njp interpreter with specified program and heap size.
-     * 
-     * @param programFile
-     *            path to program file
-     * @param heapSize
-     *            heap size
-     */
-    public Interpreter(String programFile, int heapSize) {
-        System.out.printf("Heap size = %d\n", heapSize);
-        program = parseProgram(programFile);
-        for (Statement s : program) {
-            System.out.println(s);
-        }
-    }
     
-    private List<Statement> parseProgram(String sourceFile) {
+    private static List<Statement> parseProgram(String sourceFile) {
         InputStream programStream = getProgramStream(sourceFile);
         try {
             return NPJParser.parse(programStream);
@@ -57,7 +38,7 @@ public class Interpreter {
      *            path to program file
      * @return input stream for program code
      */
-    private InputStream getProgramStream(String programFile) {
+    private static InputStream getProgramStream(String programFile) {
         InputStream programStream = null;
         try {
             programStream = new FileInputStream(programFile);
@@ -69,8 +50,12 @@ public class Interpreter {
         return programStream;
     }
 
+    /**
+     * Retrieves heap size from the system environment
+     * @return
+     */
     private static int getHeapSize() {
-        String heapSizeProp = System.getenv("npj.heap.size");
+        String heapSizeProp = System.getProperty(HEAP_SIZE_PROPERTY);
         if (heapSizeProp == null) {
             return DEFAULT_HEAP;
         } else
@@ -95,7 +80,10 @@ public class Interpreter {
         // get heap size
         int heapSize = getHeapSize();
 
-        // initialize Njp VM with program file name, heap size and GC
-        Interpreter interpreter = new Interpreter(args[0], heapSize);
+        System.out.printf("Heap size = %d\n", heapSize);
+        List<Statement> program = parseProgram(args[0]);
+        
+        VM vm = new VM(heapSize, program);
+        vm.run();
     }
 }
