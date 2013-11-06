@@ -11,6 +11,8 @@ tokens {
 @header {
 package mlos.amw.npj.parser;
 
+import java.io.IOException;
+import java.io.InputStream;
 import mlos.amw.npj.ast.*;
 }
 
@@ -18,6 +20,17 @@ import mlos.amw.npj.ast.*;
 package mlos.amw.npj.parser;
 }
  
+ 
+@members {
+    public static List<Statement> parse(InputStream input) throws IOException, 
+            RecognitionException {
+        NPJLexer lex = new NPJLexer(new ANTLRInputStream(input));
+        CommonTokenStream tokens = new CommonTokenStream(lex);
+ 
+        NPJParser parser = new NPJParser(tokens);
+        return parser.program();
+    }
+}
 
 // Lexer
 
@@ -68,13 +81,12 @@ rvalue returns [RValue val]
 ;
        
 deref returns [Deref target]
-: ID              { $target = new Deref($ID.text); }
-| ID '.' deref2   { $target = new Deref($ID.text, $deref2.target); }
+: ID deref2   { $target = new Deref($ID.text, $deref2.target); }
 ; 
         
 deref2 returns [Deref target]
 : /* epsilon */          { $target = null; }
-| ID '.' d = deref2      { $target = new Deref($ID.text, $d.target); } 
+| '.' ID d = deref2      { $target = new Deref($ID.text, $d.target); } 
 ;
  
 
