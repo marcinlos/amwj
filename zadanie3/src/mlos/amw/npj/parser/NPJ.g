@@ -41,6 +41,10 @@ package mlos.amw.npj.parser;
 INTEGER_LITERAL : (DIGIT)+ ;
  
 WHITESPACE : ( '\t' | ' ' | '\r' | '\n'| '\u000C' )+   { $channel = HIDDEN; } ;
+
+COMMENT : '//' ~('\n'|'\r')* '\r'? '\n' { $channel = HIDDEN; } ;
+
+BLOCK_COMMENT : '/*' .* '*/' { $channel = HIDDEN; } ;
  
 STRING_LITERAL : '"' (~ ('\n' | '"' ))* '"';
 
