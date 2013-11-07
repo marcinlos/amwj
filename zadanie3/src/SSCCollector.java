@@ -10,8 +10,7 @@ public class SSCCollector implements Collector {
 
     @Override
     public void collect(int[] heap, Map<Object, Object> params) {
-        // TODO Auto-generated method stub
-
+        System.out.println("COOOOOLLECTING!!!!!!!!!!!!!");
     }
 
 }

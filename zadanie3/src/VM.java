@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import mlos.amw.npj.Heap;
 import mlos.amw.npj.ast.Deref;
 import mlos.amw.npj.ast.RValue;
 import mlos.amw.npj.ast.Statement;
@@ -12,16 +13,11 @@ import mlos.amw.npj.ast.Visitor;
 
 public class VM implements Runnable, Visitor {
 
-    private final int[] heap;
-    private final int heapSize;
-    private final int areaSize;
+    private final Heap heap;
 
-    private int base;
-    private int allocOffset;
-
-    private static final int HEADER_S = 0x10000000;
-    private static final int HEADER_T = 0x20000000;
-    private static final int FORWARDER_MASK = 0x80000000;
+    public static final int HEADER_S = 0x10000000;
+    public static final int HEADER_T = 0x20000000;
+    public static final int FORWARDER_MASK = 0x80000000;
 
     private final Collector collector = new SSCCollector();
 
@@ -32,17 +28,11 @@ public class VM implements Runnable, Visitor {
     private final List<Statement> program;
 
     public VM(int heapSize, List<Statement> program) {
-        if (heapSize % 8 != 1) {
-            throw new RuntimeException("Invalid heap size (size mod 8 != 1)");
-        }
-        log("Heap size = %d", heapSize);
-        this.heapSize = heapSize;
-        this.areaSize = (heapSize - 1) / 2;
+        this.heap = new Heap(heapSize);
         this.program = program;
-        this.heap = new int[heapSize];
     }
-    
-    private void log(String msg, Object... args) {
+
+    public static void log(String msg, Object... args) {
         System.out.printf(">> " + msg + "\n", args);
     }
 
@@ -57,7 +47,7 @@ public class VM implements Runnable, Visitor {
     private class ValueExtractor implements ValueVisitor {
 
         private int value;
-        
+
         public ValueExtractor(RValue rvalue) {
             rvalue.accept(this);
         }
@@ -84,18 +74,6 @@ public class VM implements Runnable, Visitor {
 
     }
 
-    private int alloc(int size) {
-        int newOffset = allocOffset + size;
-        int offset = allocOffset;
-        
-        log("Allocating %d, heap ptr %d -> %d", size, allocOffset, newOffset);
-        allocOffset += size;
-        if (allocOffset > heapSize) {
-            throw new OutOfMemoryError();
-        }
-        return offset;
-    }
-
     private int fieldOffset(String field) {
         switch (field) {
         case "f1":
@@ -113,52 +91,81 @@ public class VM implements Runnable, Visitor {
         return vars.get(name);
     }
 
-    private int resolve(Deref deref) {
+    private int address(Deref deref) {
         int address = address(deref.name);
         if (deref.target == null) {
             return address;
         }
         deref = deref.target;
         address += fieldOffset(deref.name);
-        
+
         while (deref.target != null) {
-            address = heap[base + address];
+            address = heap.get(address);
             deref = deref.target;
             address += fieldOffset(deref.name);
         }
         return address;
     }
-    
+
     private int dereference(Deref deref) {
-        int address = resolve(deref);
+        int address = address(deref);
         if (deref.target == null) {
             return address;
         } else {
-            return heap[base + address];
+            return heap.get(address);
         }
     }
 
     private int allocString(String data) {
         int n = data.length();
-        int ptr = alloc(2 + n);
-        heap[base + ptr] = HEADER_S;
-        heap[base + ptr + 1] = n;
-
-        for (int i = 0; i < n; ++i) {
-            heap[base + ptr + 2 + i] = data.charAt(i);
-        }
-        log("Allocated string '%s' at %d (len=%d)", data, ptr, n);
+        int ptr = heap.alloc(2 + n);
+        heap.put(ptr, HEADER_S);
+        heap.put(ptr + 1, n);
+        heap.writeString(ptr + 2, data);
+        log("Allocated string \"%s\" at %d (len=%d)", data, ptr, n);
         return ptr;
     }
 
     @Override
     public void visitCollect() {
-        NPJ.collect(heap, collector, null);
+        NPJ.collect(heap.getHeap(), collector, null);
+    }
+
+    class HeapWalker {
+        private final Set<Integer> visited = new HashSet<>();
+        public final Set<String> sVals = new HashSet<>();
+        public final Set<Integer> tVals = new HashSet<>();
+
+        public void explore(int address) {
+            if (address != 0 && visited.add(address)) {
+                int header = heap.get(address);
+                if ((header & HEADER_S) != 0) {
+                    log("SVar at %d", address);
+                    
+                    int size = heap.get(address + 1);
+                    String text = heap.readString(address + 2, size);
+                    sVals.add(text);
+                } else if ((header & HEADER_T) != 0) {
+                    log("SVar at %d", address);
+                    
+                    int data = heap.get(address + 3 /* fieldOffset("data") */);
+                    tVals.add(data);
+                    int t1 = heap.get(address + 1 /* fieldOffset("t1") */);
+                    int t2 = heap.get(address + 2 /* fieldOffset("t2") */);
+                    explore(t1);
+                    explore(t2);
+                }
+            }
+        }
     }
 
     @Override
     public void visitHeapAnalyze() {
-        NPJ.heapAnalyze(null, null);
+        HeapWalker walker = new HeapWalker();
+        for (int address : vars.values()) {
+            walker.explore(address);
+        }
+        NPJ.heapAnalyze(walker.tVals, walker.sVals);
     }
 
     @Override
@@ -171,8 +178,8 @@ public class VM implements Runnable, Visitor {
 
     @Override
     public void visitDeclT(String name) {
-        int ptr = alloc(4);
-        heap[base + ptr] = HEADER_T;
+        int ptr = heap.alloc(4);
+        heap.put(ptr, HEADER_T);
         log("Allocated varT %s at %d", name, ptr);
         vars.put(name, ptr);
         tVars.add(name);
@@ -181,25 +188,18 @@ public class VM implements Runnable, Visitor {
     @Override
     public void visitAssignment(Deref target, RValue value) {
         ValueExtractor v = new ValueExtractor(value);
-        int ptr = resolve(target);
+        int ptr = address(target);
         int val = v.value;
         log("mem(%d) <- %d", ptr, val);
-        heap[base + ptr] = val;
+        heap.put(ptr, val);
     }
 
     @Override
     public void visitPrintVar(String name) {
         int ptr = address(name);
         if (ptr != 0) {
-            int n = heap[base + ptr + 1];
-            int strBase = base + ptr + 2;
-
-            StringBuilder sb = new StringBuilder();
-            for (int i = 0; i < n; ++i) {
-                char c = (char) heap[strBase + i];
-                sb.append(c);
-            }
-            String text = sb.toString();
+            int n = heap.get(ptr + 1);
+            String text = heap.readString(ptr + 2, n);
             print(text);
         } else {
             print("NULL");
@@ -210,7 +210,7 @@ public class VM implements Runnable, Visitor {
     public void visitPrintLiteral(String text) {
         print(text);
     }
-    
+
     private void print(String text) {
         NPJ.print(text);
     }
