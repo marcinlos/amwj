@@ -7,4 +7,9 @@ public enum HeapAnalyze implements Statement {
     public void accept(Visitor v) {
         v.visitHeapAnalyze();
     }
+    
+    @Override
+    public String toString() {
+        return "HeapAnalyze";
+    }
 }

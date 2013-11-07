@@ -7,4 +7,9 @@ public enum Collect implements Statement {
     public void accept(Visitor v) {
         v.visitCollect();
     }
+    
+    @Override
+    public String toString() {
+        return "Collect";
+    }
 }

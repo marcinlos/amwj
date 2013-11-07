@@ -33,4 +33,10 @@ public class Print implements Statement {
         case VAR: v.visitPrintVar(string); break;
         }
     }
+    
+    @Override
+    public String toString() {
+        String sfmt = var() ? "%s" : "\"%s\"";
+        return String.format("Print " + sfmt, string);
+    }
 }

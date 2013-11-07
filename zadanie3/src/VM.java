@@ -14,30 +14,42 @@ public class VM implements Runnable, Visitor {
 
     private final int[] heap;
     private final int heapSize;
+    private final int areaSize;
 
     private int base;
     private int allocOffset;
 
-    private static final int HEADER_S = 0xabab0000;
-    private static final int HEADER_T = 0xefef0000;
+    private static final int HEADER_S = 0x10000000;
+    private static final int HEADER_T = 0x20000000;
+    private static final int FORWARDER_MASK = 0x80000000;
 
     private final Collector collector = new SSCCollector();
 
-    private final Map<String, Integer> vars = new HashMap<>(30);
+    private final Map<String, Integer> vars = new HashMap<>();
     private final Set<String> sVars = new HashSet<>();
     private final Set<String> tVars = new HashSet<>();
 
     private final List<Statement> program;
 
     public VM(int heapSize, List<Statement> program) {
+        if (heapSize % 8 != 1) {
+            throw new RuntimeException("Invalid heap size (size mod 8 != 1)");
+        }
+        log("Heap size = %d", heapSize);
         this.heapSize = heapSize;
+        this.areaSize = (heapSize - 1) / 2;
         this.program = program;
         this.heap = new int[heapSize];
+    }
+    
+    private void log(String msg, Object... args) {
+        System.out.printf(">> " + msg + "\n", args);
     }
 
     @Override
     public void run() {
         for (Statement s : program) {
+            log("======== " + s.toString());
             s.accept(this);
         }
     }
@@ -67,13 +79,16 @@ public class VM implements Runnable, Visitor {
 
         @Override
         public void visitVar(Deref deref) {
-            this.value = resolveValue(deref);
+            this.value = dereference(deref);
         }
 
     }
 
     private int alloc(int size) {
+        int newOffset = allocOffset + size;
         int offset = allocOffset;
+        
+        log("Allocating %d, heap ptr %d -> %d", size, allocOffset, newOffset);
         allocOffset += size;
         if (allocOffset > heapSize) {
             throw new OutOfMemoryError();
@@ -100,30 +115,27 @@ public class VM implements Runnable, Visitor {
 
     private int resolve(Deref deref) {
         int address = address(deref.name);
-
-        while (deref.target != null) {
-            deref = deref.target;
-            int fieldOff = fieldOffset(deref.name);
-            address = heap[base + address + fieldOff];
-        }
-        return address;
-    }
-
-    private boolean isValueType(String name) {
-        return "data".equals(name);
-    }
-
-    private int resolveValue(Deref deref) {
-        int address = address(deref.name);
         if (deref.target == null) {
             return address;
         }
+        deref = deref.target;
+        address += fieldOffset(deref.name);
+        
         while (deref.target != null) {
+            address = heap[base + address];
             deref = deref.target;
-            int fieldOff = fieldOffset(deref.name);
-            address = heap[base + address + fieldOff];
+            address += fieldOffset(deref.name);
         }
-        return isValueType(deref.name) ? heap[base + address] : address;
+        return address;
+    }
+    
+    private int dereference(Deref deref) {
+        int address = resolve(deref);
+        if (deref.target == null) {
+            return address;
+        } else {
+            return heap[base + address];
+        }
     }
 
     private int allocString(String data) {
@@ -135,7 +147,7 @@ public class VM implements Runnable, Visitor {
         for (int i = 0; i < n; ++i) {
             heap[base + ptr + 2 + i] = data.charAt(i);
         }
-        System.out.println(">> Allocated string '" + data + "' at " + ptr);
+        log("Allocated string '%s' at %d (len=%d)", data, ptr, n);
         return ptr;
     }
 
@@ -152,7 +164,7 @@ public class VM implements Runnable, Visitor {
     @Override
     public void visitDeclS(String name, String value) {
         int ptr = allocString(value);
-        System.out.printf(">> Allocated varS %s at %d, val='%s'\n", name, ptr, value);
+        log("Allocated varS %s at %d, val='%s'", name, ptr, value);
         vars.put(name, ptr);
         sVars.add(name);
     }
@@ -161,7 +173,7 @@ public class VM implements Runnable, Visitor {
     public void visitDeclT(String name) {
         int ptr = alloc(4);
         heap[base + ptr] = HEADER_T;
-        System.out.printf(">> Allocated varT %s at %d\n", name, ptr);
+        log("Allocated varT %s at %d", name, ptr);
         vars.put(name, ptr);
         tVars.add(name);
     }
@@ -171,6 +183,7 @@ public class VM implements Runnable, Visitor {
         ValueExtractor v = new ValueExtractor(value);
         int ptr = resolve(target);
         int val = v.value;
+        log("mem(%d) <- %d", ptr, val);
         heap[base + ptr] = val;
     }
 
@@ -187,14 +200,18 @@ public class VM implements Runnable, Visitor {
                 sb.append(c);
             }
             String text = sb.toString();
-            NPJ.print(name + " = '" + text + "'");
+            print(text);
         } else {
-            NPJ.print("NULL");
+            print("NULL");
         }
     }
 
     @Override
     public void visitPrintLiteral(String text) {
+        print(text);
+    }
+    
+    private void print(String text) {
         NPJ.print(text);
     }
 

@@ -14,5 +14,10 @@ public class Assignment implements Statement {
     public void accept(Visitor v) {
         v.visitAssignment(lhs, rhs);
     }
+    
+    @Override
+    public String toString() {
+        return String.format("%s = %s", lhs, rhs);
+    }
 
 }

@@ -12,5 +12,10 @@ public class StringLiteral implements RValue {
     public void accept(ValueVisitor visitor) {
         visitor.visitString(value);
     }
+    
+    @Override
+    public String toString() {
+        return String.format("\"%s\"", value);
+    }
 
 }

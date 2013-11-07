@@ -7,4 +7,9 @@ public enum Null implements RValue {
     public void accept(ValueVisitor visitor) {
         visitor.visitNull();
     }
+    
+    @Override
+    public String toString() {
+        return "NULL";
+    }
 }

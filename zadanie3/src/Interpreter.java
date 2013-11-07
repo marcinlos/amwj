@@ -78,7 +78,6 @@ public class Interpreter {
         // get heap size
         int heapSize = getHeapSize();
 
-        System.out.printf("Heap size = %d\n", heapSize);
         List<Statement> program = parseProgram(args[0]);
         
         VM vm = new VM(heapSize, program);

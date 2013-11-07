@@ -18,5 +18,16 @@ public class Deref implements RValue {
     public void accept(ValueVisitor visitor) {
         visitor.visitVar(this);
     }
+    
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder(name);
+        Deref d = this;
+        while (d.target != null) {
+            d = d.target;
+            sb.append('.').append(d.name);
+        }
+        return sb.toString();
+    }
 
 }

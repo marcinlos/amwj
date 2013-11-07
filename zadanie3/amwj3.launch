@@ -9,5 +9,5 @@
 <stringAttribute key="org.eclipse.jdt.launching.MAIN_TYPE" value="Interpreter"/>
 <stringAttribute key="org.eclipse.jdt.launching.PROGRAM_ARGUMENTS" value="test.npj"/>
 <stringAttribute key="org.eclipse.jdt.launching.PROJECT_ATTR" value="amw3"/>
-<stringAttribute key="org.eclipse.jdt.launching.VM_ARGUMENTS" value="-Dnpj.heap.size=65536"/>
+<stringAttribute key="org.eclipse.jdt.launching.VM_ARGUMENTS" value="-Dnpj.heap.size=65537"/>
 </launchConfiguration>

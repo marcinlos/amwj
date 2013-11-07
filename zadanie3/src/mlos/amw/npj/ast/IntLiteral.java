@@ -16,5 +16,10 @@ public class IntLiteral implements RValue {
     public void accept(ValueVisitor visitor) {
         visitor.visitInt(value);
     }
+    
+    @Override
+    public String toString() {
+        return String.valueOf(value);
+    }
 
 }

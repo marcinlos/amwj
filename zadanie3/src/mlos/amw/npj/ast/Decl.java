@@ -32,4 +32,14 @@ public class Decl implements Statement {
         }
     }
     
+    @Override
+    public String toString() {
+        if (type == VarType.S) {
+            String val = value == null ? "NULL" : ("\"" + value + "\"");
+            return String.format("VarDeclS %s %s", name, val);
+        } else {
+            return "VarDeclT " + name;
+        }
+    }
+    
 }
