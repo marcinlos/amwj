@@ -10,4 +10,9 @@ public class Assignment implements Statement {
         this.rhs = rhs;
     }
 
+    @Override
+    public void accept(Visitor v) {
+        v.visitAssignment(lhs, rhs);
+    }
+
 }

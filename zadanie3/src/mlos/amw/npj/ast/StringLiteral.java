@@ -8,4 +8,9 @@ public class StringLiteral implements RValue {
         this.value = value;
     }
 
+    @Override
+    public void accept(ValueVisitor visitor) {
+        visitor.visitString(value);
+    }
+
 }

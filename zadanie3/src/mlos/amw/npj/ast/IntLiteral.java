@@ -12,4 +12,9 @@ public class IntLiteral implements RValue {
         return new IntLiteral(Integer.parseInt(s));
     }
 
+    @Override
+    public void accept(ValueVisitor visitor) {
+        visitor.visitInt(value);
+    }
+
 }

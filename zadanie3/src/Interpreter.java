@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 
-import mlos.amw.npj.VM;
 import mlos.amw.npj.ast.Statement;
 import mlos.amw.npj.parser.NPJParser;
 
@@ -13,7 +12,6 @@ public class Interpreter {
     private static final int DEFAULT_HEAP = 32;
     private static final String HEAP_SIZE_PROPERTY = "npj.heap.size";
 
-    
     private static List<Statement> parseProgram(String sourceFile) {
         InputStream programStream = getProgramStream(sourceFile);
         try {

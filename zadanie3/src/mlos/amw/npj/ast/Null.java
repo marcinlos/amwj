@@ -1,5 +1,10 @@
 package mlos.amw.npj.ast;
 
 public enum Null implements RValue {
-    VALUE
+    VALUE;
+
+    @Override
+    public void accept(ValueVisitor visitor) {
+        visitor.visitNull();
+    }
 }

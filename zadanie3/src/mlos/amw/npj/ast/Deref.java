@@ -14,4 +14,9 @@ public class Deref implements RValue {
         this(name, null);
     }
 
+    @Override
+    public void accept(ValueVisitor visitor) {
+        visitor.visitVar(this);
+    }
+
 }

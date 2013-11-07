@@ -25,4 +25,12 @@ public class Print implements Statement {
     public static Print literal(String literal) {
         return new Print(literal, PrintSubject.LITERAL);
     }
+
+    @Override
+    public void accept(Visitor v) {
+        switch (subject) {
+        case LITERAL: v.visitPrintLiteral(string); break;
+        case VAR: v.visitPrintVar(string); break;
+        }
+    }
 }

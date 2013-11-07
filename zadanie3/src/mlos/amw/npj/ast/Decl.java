@@ -23,5 +23,13 @@ public class Decl implements Statement {
     public static Decl newSVar(String name, String value) {
         return new Decl(name, VarType.S, value);
     }
+
+    @Override
+    public void accept(Visitor v) {
+        switch (type) {
+        case S: v.visitDeclS(name, value); break;
+        case T: v.visitDeclT(name); break;
+        }
+    }
     
 }
