@@ -1,4 +1,4 @@
-VarDeclT treetop;
+/*VarDeclT treetop;
 VarDeclT t1;
 VarDeclT t2;
 treetop.f1 = t1;
@@ -26,4 +26,26 @@ Print s1;
 Print s2;
 HeapAnalyze;
 Collect;
+HeapAnalyze;*/
+
+VarDeclT root;
+root.data = 666;
+VarDeclT t1;
+VarDeclT t2;
+t1.data = 77;
+t2.data = 123;
+t1.f1 = t2;
+t2.f1 = t1;
+root.f1 = t1; 
+VarDeclS msg "blabla";
+Print msg;
 HeapAnalyze;
+t1 = NULL;
+t2 = NULL;
+Collect;
+HeapAnalyze;
+Print msg;
+root = NULL;
+Collect;
+HeapAnalyze;
+Print msg;

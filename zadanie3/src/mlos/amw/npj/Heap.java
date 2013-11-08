@@ -1,14 +1,13 @@
 package mlos.amw.npj;
 
+import java.util.Arrays;
+
 
 public class Heap {
 
     private final int[] heap;
-    private final int heapSize;
     private final int areaSize;
     
-    private static final int ADDR_SPACE_BASE = 1;//0x8000;
-
     private int base = 1;
     private int allocOffset;
 
@@ -17,13 +16,20 @@ public class Heap {
             throw new RuntimeException("Invalid heap size (size mod 8 != 1)");
         }
         log("Heap size = %d", heapSize);
-        this.heapSize = heapSize;
         this.areaSize = (heapSize - 1) / 2;
         this.heap = new int[heapSize];
     }
     
     private int physical(int address) {
-        return base + (address - ADDR_SPACE_BASE);
+        return address;
+    }
+    
+    public int getBase() {
+        return base;
+    }
+    
+    public void setBase(int base) {
+        this.base = base;
     }
     
     public int get(int address) {
@@ -34,8 +40,13 @@ public class Heap {
         heap[physical(address)] = val;
     }
     
-    private void swapBase() {
+    public void flip() {
         base = areaSize - (base - 1) + 1;
+        allocOffset = 0;
+    }
+    
+    public int getAreaSize() {
+        return areaSize;
     }
     
     public int[] getHeap() {
@@ -69,11 +80,19 @@ public class Heap {
         int offset = allocOffset;
         
         log("Allocating %d, heap offset %d -> %d", size, allocOffset, newOffset);
-        allocOffset += size;
-        if (allocOffset > areaSize) {
+        if (newOffset > areaSize) {
             throw new OutOfMemoryError();
         }
-        return ADDR_SPACE_BASE + offset;
+        allocOffset = newOffset;
+        return base + offset;
     }
-
+    
+    public void memcpy(int dest, int src, int size) {
+        System.arraycopy(heap, src, heap, dest, size);
+    }
+    
+    public void memset(int dest, int val, int size) {
+        Arrays.fill(heap, dest, dest + size, val);
+    }
+    
 }

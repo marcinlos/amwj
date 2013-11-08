@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import mlos.amw.npj.Header;
 import mlos.amw.npj.Heap;
 import mlos.amw.npj.ast.Deref;
 import mlos.amw.npj.ast.RValue;
@@ -15,25 +16,33 @@ public class VM implements Runnable, Visitor {
 
     private final Heap heap;
 
-    public static final int HEADER_S = 0x10000000;
-    public static final int HEADER_T = 0x20000000;
-    public static final int FORWARDER_MASK = 0x80000000;
+    public static final int TYPE_S = 0x000001;
+    public static final int TYPE_T = 0x000002;
 
-    private final Collector collector = new SSCCollector();
+    public static final int VARS_KEY = 0;
 
-    private final Map<String, Integer> vars = new HashMap<>();
-    private final Set<String> sVars = new HashSet<>();
-    private final Set<String> tVars = new HashSet<>();
+    private final Collector collector;
+
+    private Map<String, Integer> vars = new HashMap<>();
 
     private final List<Statement> program;
 
     public VM(int heapSize, List<Statement> program) {
         this.heap = new Heap(heapSize);
         this.program = program;
+        this.collector = new SSCCollector(heap);
     }
 
     public static void log(String msg, Object... args) {
         System.out.printf(">> " + msg + "\n", args);
+    }
+
+    public static boolean isSVar(int header) {
+        return Header.type(header) == TYPE_S;
+    }
+
+    public static boolean isTVar(int header) {
+        return Header.type(header) == TYPE_T;
     }
 
     @Override
@@ -92,10 +101,11 @@ public class VM implements Runnable, Visitor {
     }
 
     private int address(Deref deref) {
-        int address = address(deref.name);
         if (deref.target == null) {
-            return address;
+            return -1;
         }
+
+        int address = address(deref.name);
         deref = deref.target;
         address += fieldOffset(deref.name);
 
@@ -108,10 +118,10 @@ public class VM implements Runnable, Visitor {
     }
 
     private int dereference(Deref deref) {
-        int address = address(deref);
         if (deref.target == null) {
-            return address;
+            return vars.get(deref.name);
         } else {
+            int address = address(deref);
             return heap.get(address);
         }
     }
@@ -119,16 +129,21 @@ public class VM implements Runnable, Visitor {
     private int allocString(String data) {
         int n = data.length();
         int ptr = heap.alloc(2 + n);
-        heap.put(ptr, HEADER_S);
+        heap.put(ptr, TYPE_S);
         heap.put(ptr + 1, n);
         heap.writeString(ptr + 2, data);
         log("Allocated string \"%s\" at %d (len=%d)", data, ptr, n);
         return ptr;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public void visitCollect() {
-        NPJ.collect(heap.getHeap(), collector, null);
+        Map<Object, Object> params = new HashMap<>();
+        params.put(VARS_KEY, vars);
+        NPJ.collect(heap.getHeap(), collector, params);
+
+        vars = (Map<String, Integer>) params.get(VARS_KEY);
     }
 
     class HeapWalker {
@@ -139,15 +154,15 @@ public class VM implements Runnable, Visitor {
         public void explore(int address) {
             if (address != 0 && visited.add(address)) {
                 int header = heap.get(address);
-                if ((header & HEADER_S) != 0) {
+                if (isSVar(header)) {
                     log("SVar at %d", address);
-                    
+
                     int size = heap.get(address + 1);
                     String text = heap.readString(address + 2, size);
                     sVals.add(text);
-                } else if ((header & HEADER_T) != 0) {
+                } else if (isTVar(header)) {
                     log("SVar at %d", address);
-                    
+
                     int data = heap.get(address + 3 /* fieldOffset("data") */);
                     tVals.add(data);
                     int t1 = heap.get(address + 1 /* fieldOffset("t1") */);
@@ -170,19 +185,18 @@ public class VM implements Runnable, Visitor {
 
     @Override
     public void visitDeclS(String name, String value) {
-        int ptr = allocString(value);
-        log("Allocated varS %s at %d, val='%s'", name, ptr, value);
-        vars.put(name, ptr);
-        sVars.add(name);
+        int address = allocString(value);
+        log("Allocated varS %s at %d, val='%s'", name, address, value);
+        vars.put(name, address);
     }
 
     @Override
     public void visitDeclT(String name) {
-        int ptr = heap.alloc(4);
-        heap.put(ptr, HEADER_T);
-        log("Allocated varT %s at %d", name, ptr);
-        vars.put(name, ptr);
-        tVars.add(name);
+        int address = heap.alloc(4);
+        heap.put(address, TYPE_T);
+        heap.memset(address + 1, 0, 3);
+        log("Allocated varT %s at %d", name, address);
+        vars.put(name, address);
     }
 
     @Override
@@ -190,8 +204,12 @@ public class VM implements Runnable, Visitor {
         ValueExtractor v = new ValueExtractor(value);
         int ptr = address(target);
         int val = v.value;
-        log("mem(%d) <- %d", ptr, val);
-        heap.put(ptr, val);
+        if (ptr < 0) {
+            vars.put(target.name, val);
+        } else {
+            log("mem(%d) <- %d", ptr, val);
+            heap.put(ptr, val);
+        }
     }
 
     @Override
