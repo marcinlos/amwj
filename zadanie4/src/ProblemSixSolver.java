@@ -5,7 +5,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 
-import mlos.amw.ex4.Inliner;
+import mlos.amw.ex4.CallInliner;
 
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
@@ -22,7 +22,7 @@ public class ProblemSixSolver {
         ClassReader reader = new ClassReader(new FileInputStream(input));
         ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
 
-        ClassVisitor inliner = new Inliner(inlinedClass, writer);
+        ClassVisitor inliner = new CallInliner(inlinedClass, writer);
         reader.accept(inliner, ClassReader.EXPAND_FRAMES);
 
         OutputStream out = new FileOutputStream(output);
@@ -33,14 +33,14 @@ public class ProblemSixSolver {
     private static ClassNode getNode(String file) throws IOException {
         ClassReader reader = new ClassReader(new FileInputStream(file));
         ClassNode node = new ClassNode();
-        reader.accept(node, 0);
+        reader.accept(node, ClassReader.EXPAND_FRAMES);
         return node;
     }
 
     public static void main(String[] args) throws IOException {
         String input = args[0] + ".class";
-        String output = args[0] + ".class";;
-        String inlined = args[1] + ".class";;
+        String output = args[0] + ".class";
+        String inlined = args[1] + ".class";
 
         run(input, output, inlined);
     }
