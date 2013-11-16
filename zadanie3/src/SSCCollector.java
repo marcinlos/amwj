@@ -39,11 +39,10 @@ class SSCCollector implements Collector {
         VM.log("   At %d", address);
         int header = heap.get(address);
         if (Vars.isProxy(header)) {
-            VM.log("   [already copied to %d]", heap.get(address + 1));
-            return heap.get(address + 1);
+            int newAddress = Vars.proxyTarget(header);
+            VM.log("   [already copied to %d]", newAddress);
+            return newAddress;
         }
-        heap.put(address, header | Vars.PROXY);
-
         int newAddress = copyVar(address, header);
         heap.put(newAddress, header);
         VM.log("Copied to %d", newAddress);
@@ -62,7 +61,7 @@ class SSCCollector implements Collector {
     }
     
     private void makeProxy(int address, int newAddress) {
-        heap.put(address + 1, newAddress);
+        heap.put(address, Vars.proxy(newAddress));
     }
 
     private int copySVar(int address) {

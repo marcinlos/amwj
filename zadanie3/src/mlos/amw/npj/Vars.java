@@ -18,6 +18,14 @@ public class Vars {
         return (header & PROXY) != 0;
     }
     
+    public static int proxy(int address) {
+        return address | PROXY;
+    }
+    
+    public static int proxyTarget(int header) {
+        return header & ~PROXY;
+    }
+    
     public static boolean isSVar(int header) {
         return type(header) == TYPE_S;
     }

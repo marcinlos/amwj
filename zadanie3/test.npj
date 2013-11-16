@@ -1,8 +1,12 @@
-VarDeclS a "blablabla";
+VarDeclT a;
+VarDeclT b;
+a.f1 = b;
+a.data = 13;
+b.f1 = a;
+b.data = 19;
+b = NULL;
 HeapAnalyze;
-a = "ughdsfsdfsd";
-HeapAnalyze;
-a = "sfaewfawefd";
+Collect;
 HeapAnalyze;
 
 /*
