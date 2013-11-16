@@ -20,24 +20,12 @@ public class Heap {
         this.heap = new int[heapSize];
     }
     
-    private int physical(int address) {
-        return address;
-    }
-    
-    public int getBase() {
-        return base;
-    }
-    
-    public void setBase(int base) {
-        this.base = base;
-    }
-    
     public int get(int address) {
-        return heap[physical(address)];
+        return heap[address];
     }
     
     public void put(int address, int val) {
-        heap[physical(address)] = val;
+        heap[address] = val;
     }
     
     public void flip() {
@@ -54,14 +42,14 @@ public class Heap {
     }
     
     public void writeString(int address, String s) {
-        int ptr = physical(address);
+        int ptr = address;
         for (int i = 0; i < s.length(); ++i) {
             heap[ptr + i] = s.charAt(i);
         }
     }
     
     public String readString(int address, int size) {
-        int ptr = physical(address);
+        int ptr = address;
 
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < size; ++i) {
@@ -72,26 +60,31 @@ public class Heap {
     }
     
     public static void log(String msg, Object... args) {
-        System.out.printf(">> " + msg + "\n", args);
+        System.err.printf("[Heap] " + msg + "\n", args);
     }
     
     public int alloc(int size) {
+        int remaining = areaSize - allocOffset;
+        if (remaining < size) {
+            log("Not enough space to allocate %d (%d remains from %d)", size,
+                    remaining, areaSize);
+            return 0;
+        }
         int newOffset = allocOffset + size;
         int offset = allocOffset;
         
-        log("Allocating %d, heap offset %d -> %d", size, allocOffset, newOffset);
-        if (newOffset > areaSize) {
-            throw new OutOfMemoryError();
-        }
+        log("Allocating %d, offset %d -> %d", size, allocOffset, newOffset);
         allocOffset = newOffset;
         return base + offset;
     }
     
     public void memcpy(int dest, int src, int size) {
+        log("mem[%d : %d] <- mem[%d:%d] (n=%d)", dest, dest + size, src, src + size, size);
         System.arraycopy(heap, src, heap, dest, size);
     }
     
     public void memset(int dest, int val, int size) {
+        log("mem[%d : %d] <- %d (n=%d)", dest, dest + size, val, size);
         Arrays.fill(heap, dest, dest + size, val);
     }
     

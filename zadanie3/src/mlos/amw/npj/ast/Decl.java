@@ -5,7 +5,7 @@ public class Decl implements Statement {
     public final String name;
     public final VarType type;
     public final String value;
-
+    
     private Decl(String name, VarType type, String value) {
         this.name = name;
         this.type = type;

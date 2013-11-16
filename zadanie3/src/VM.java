@@ -1,11 +1,10 @@
+import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
-import mlos.amw.npj.Header;
 import mlos.amw.npj.Heap;
+import mlos.amw.npj.Vars;
 import mlos.amw.npj.ast.Deref;
 import mlos.amw.npj.ast.RValue;
 import mlos.amw.npj.ast.Statement;
@@ -14,35 +13,32 @@ import mlos.amw.npj.ast.Visitor;
 
 public class VM implements Runnable, Visitor {
 
+    private static final Map<String, Integer> OFFSETS;
+
+    static {
+        OFFSETS = new HashMap<String, Integer>();
+        OFFSETS.put("f1", 1);
+        OFFSETS.put("f2", 2);
+        OFFSETS.put("data", 3);
+    }
+
     private final Heap heap;
-
-    public static final int TYPE_S = 0x000001;
-    public static final int TYPE_T = 0x000002;
-
-    public static final int VARS_KEY = 0;
-
+    private final HeapWalker walker;
     private final Collector collector;
 
-    private Map<String, Integer> vars = new HashMap<>();
+    private Map<String, Integer> vars = new HashMap<String, Integer>();
 
     private final List<Statement> program;
 
     public VM(int heapSize, List<Statement> program) {
         this.heap = new Heap(heapSize);
         this.program = program;
-        this.collector = new SSCCollector(heap);
+        this.collector = new SSCCollector(heap, vars);
+        this.walker = new HeapWalker(heap);
     }
 
     public static void log(String msg, Object... args) {
-        System.out.printf(">> " + msg + "\n", args);
-    }
-
-    public static boolean isSVar(int header) {
-        return Header.type(header) == TYPE_S;
-    }
-
-    public static boolean isTVar(int header) {
-        return Header.type(header) == TYPE_T;
+        System.err.printf("[VM]   " + msg + "\n", args);
     }
 
     @Override
@@ -51,6 +47,19 @@ public class VM implements Runnable, Visitor {
             log("======== " + s.toString());
             s.accept(this);
         }
+    }
+
+    private int alloc(int size) {
+        int ptr = heap.alloc(size);
+        if (ptr == 0) {
+            log("OOM, running GC");
+            gc();
+            ptr = heap.alloc(size);
+            if (ptr == 0) {
+                throw new RuntimeException("Out of memory");
+            }
+        }
+        return ptr;
     }
 
     private class ValueExtractor implements ValueVisitor {
@@ -84,16 +93,7 @@ public class VM implements Runnable, Visitor {
     }
 
     private int fieldOffset(String field) {
-        switch (field) {
-        case "f1":
-            return 1;
-        case "f2":
-            return 2;
-        case "data":
-            return 3;
-        default:
-            throw new IllegalArgumentException("No such field");
-        }
+        return OFFSETS.get(field);
     }
 
     private int address(String name) {
@@ -127,59 +127,32 @@ public class VM implements Runnable, Visitor {
     }
 
     private int allocString(String data) {
-        int n = data.length();
-        int ptr = heap.alloc(2 + n);
-        heap.put(ptr, TYPE_S);
-        heap.put(ptr + 1, n);
-        heap.writeString(ptr + 2, data);
-        log("Allocated string \"%s\" at %d (len=%d)", data, ptr, n);
-        return ptr;
+        if (data != null) {
+            int n = data.length();
+            int ptr = alloc(2 + n);
+            heap.put(ptr, Vars.TYPE_S);
+            heap.put(ptr + 1, n);
+            heap.writeString(ptr + 2, data);
+            log("Allocated string \"%s\" at %d (len=%d)", data, ptr, n);
+            return ptr;
+        } else {
+            return 0;
+        }
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public void visitCollect() {
-        Map<Object, Object> params = new HashMap<>();
-        params.put(VARS_KEY, vars);
-        NPJ.collect(heap.getHeap(), collector, params);
-
-        vars = (Map<String, Integer>) params.get(VARS_KEY);
+        gc();
     }
 
-    class HeapWalker {
-        private final Set<Integer> visited = new HashSet<>();
-        public final Set<String> sVals = new HashSet<>();
-        public final Set<Integer> tVals = new HashSet<>();
-
-        public void explore(int address) {
-            if (address != 0 && visited.add(address)) {
-                int header = heap.get(address);
-                if (isSVar(header)) {
-                    log("SVar at %d", address);
-
-                    int size = heap.get(address + 1);
-                    String text = heap.readString(address + 2, size);
-                    sVals.add(text);
-                } else if (isTVar(header)) {
-                    log("SVar at %d", address);
-
-                    int data = heap.get(address + 3 /* fieldOffset("data") */);
-                    tVals.add(data);
-                    int t1 = heap.get(address + 1 /* fieldOffset("t1") */);
-                    int t2 = heap.get(address + 2 /* fieldOffset("t2") */);
-                    explore(t1);
-                    explore(t2);
-                }
-            }
-        }
+    private void gc() {
+        NPJ.collect(heap.getHeap(), collector, null);
     }
 
     @Override
     public void visitHeapAnalyze() {
-        HeapWalker walker = new HeapWalker();
-        for (int address : vars.values()) {
-            walker.explore(address);
-        }
+        Collection<Integer> roots = vars.values();
+        walker.traverse(roots);
         NPJ.heapAnalyze(walker.tVals, walker.sVals);
     }
 
@@ -192,24 +165,33 @@ public class VM implements Runnable, Visitor {
 
     @Override
     public void visitDeclT(String name) {
-        int address = heap.alloc(4);
-        heap.put(address, TYPE_T);
+        int address = alloc(4);
+        heap.put(address, Vars.TYPE_T);
         heap.memset(address + 1, 0, 3);
         log("Allocated varT %s at %d", name, address);
         vars.put(name, address);
     }
 
+    private void store(Deref target, int value) {
+        int ptr = address(target);
+        if (ptr < 0) {
+            String var = target.name;
+            log("var(%s) <- %d", var, value);
+            vars.put(var, value);
+        } else {
+            log("mem(%d) <- %d", ptr, value);
+            heap.put(ptr, value);
+        }
+    }
+    
     @Override
     public void visitAssignment(Deref target, RValue value) {
+        // so that gc can reclaim memory in case new object is assigned to
+        // a reference that holds large subgraph
+        store(target, 0);
         ValueExtractor v = new ValueExtractor(value);
-        int ptr = address(target);
         int val = v.value;
-        if (ptr < 0) {
-            vars.put(target.name, val);
-        } else {
-            log("mem(%d) <- %d", ptr, val);
-            heap.put(ptr, val);
-        }
+        store(target, val);
     }
 
     @Override

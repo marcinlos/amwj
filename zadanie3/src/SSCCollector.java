@@ -1,31 +1,26 @@
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import mlos.amw.npj.Header;
+import mlos.amw.npj.Vars;
 import mlos.amw.npj.Heap;
 
-public class SSCCollector implements Collector {
+class SSCCollector implements Collector {
 
     private final Heap heap;
+    private final Map<String, Integer> vars;
 
-    public SSCCollector(Heap heap) {
+    public SSCCollector(Heap heap, Map<String, Integer> vars) {
         this.heap = heap;
+        this.vars = vars;
     }
 
     @Override
     public void collect(int[] data, Map<Object, Object> params) {
         VM.log("Collecting garbage");
 
-        @SuppressWarnings("unchecked")
-        Map<String, Integer> vars = (Map<String, Integer>) params
-                .get(VM.VARS_KEY);
-
         heap.flip();
 
         VM.log("Exploring %d roots", vars.size());
-
-        Map<String, Integer> newVars = new HashMap<>();
 
         for (Entry<String, Integer> var : vars.entrySet()) {
             int address = var.getValue();
@@ -33,9 +28,8 @@ public class SSCCollector implements Collector {
 
             VM.log("Starting at %s (address: %d)", name, address);
             int newAddress = traverse(address);
-            newVars.put(name, newAddress);
+            var.setValue(newAddress);
         }
-        params.put(VM.VARS_KEY, newVars);
     }
 
     private int traverse(int address) {
@@ -44,11 +38,11 @@ public class SSCCollector implements Collector {
 
         VM.log("   At %d", address);
         int header = heap.get(address);
-        if (Header.isProxy(header)) {
+        if (Vars.isProxy(header)) {
             VM.log("   [already copied to %d]", heap.get(address + 1));
             return heap.get(address + 1);
         }
-        heap.put(address, header | Header.PROXY);
+        heap.put(address, header | Vars.PROXY);
 
         int newAddress = copyVar(address, header);
         heap.put(newAddress, header);
@@ -57,11 +51,11 @@ public class SSCCollector implements Collector {
     }
     
     private int copyVar(int address, int header) {
-        int type = Header.type(header);
+        int type = Vars.type(header);
         
         switch (type) {
-        case VM.TYPE_S: return copySVar(address);
-        case VM.TYPE_T: return copyTVar(address);
+        case Vars.TYPE_S: return copySVar(address);
+        case Vars.TYPE_T: return copyTVar(address);
         default:
             throw new RuntimeException("Unknown var type: " + type);
         }

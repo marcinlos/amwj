@@ -1,33 +1,11 @@
-/*VarDeclT treetop;
-VarDeclT t1;
-VarDeclT t2;
-treetop.f1 = t1;
-treetop.f2 = t2;
-treetop.data = 1;
-treetop.f1.data = 2;
-treetop.f2.data = 3;
-t1 = NULL;
-
-Print "Helloworld";
-Print "Helloworld 2";
-Collect;
+VarDeclS a "blablabla";
+HeapAnalyze;
+a = "ughdsfsdfsd";
+HeapAnalyze;
+a = "sfaewfawefd";
 HeapAnalyze;
 
-
-
-VarDeclT cycle;
-cycle.f1 = cycle;
-cycle.data = 23;
-VarDeclS s1 "testMessage";
-VarDeclS s2 "test2";
-VarDeclS s3 "test3";
-Print "stringMessage";
-Print s1;
-Print s2;
-HeapAnalyze;
-Collect;
-HeapAnalyze;*/
-
+/*
 VarDeclT root;
 root.data = 666;
 VarDeclT t1;
@@ -49,3 +27,4 @@ root = NULL;
 Collect;
 HeapAnalyze;
 Print msg;
+*/

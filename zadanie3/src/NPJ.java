@@ -17,15 +17,15 @@ public class NPJ {
 	  typeSVariables - kolekcja wartosci wszystkich zywych obiektow typu S 
 	*/
     public static void heapAnalyze(Collection<Integer> typeTVariables, Collection<String> typeSVariables) {
-        System.out.println("= = = = = = = = = = = = = = = = = = = = = =");
-        System.out.println("Ts:");
+        System.err.println("= = = = = = = = = = = = = = = = = = = = = =");
+        System.err.println("T:");
         for (Integer n : typeTVariables) {
-            System.out.println("   " + n);
+            System.err.println("   " + n);
         }
-        System.out.println("Ss:");
+        System.err.println("S:");
         for (String s : typeSVariables) {
-            System.out.println("   " + s);
+            System.err.println("   " + s);
         }
-        System.out.println();
+        System.err.println("= = = = = = = = = = = = = = = = = = = = = =");
     }
 }

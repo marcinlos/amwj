@@ -56,7 +56,7 @@ fragment DIGIT  : '0'..'9' ;
 // Parser
 
 program returns [List<Statement> prog] 
-:                               { List<Statement> stms = new ArrayList<>(); } 
+:                               { List<Statement> stms = new ArrayList<Statement>(); } 
   (s = statement ';'            { stms.add($s.stm); } 
   )* EOF                        { $prog = stms; } 
 ;
