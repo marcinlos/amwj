@@ -189,9 +189,14 @@ public class VM implements Runnable, Visitor {
         // so that gc can reclaim memory in case new object is assigned to
         // a reference that holds large subgraph
         store(target, 0);
+        int val = valueOf(value);
+        store(target, val);
+    }
+
+    private int valueOf(RValue value) {
         ValueExtractor v = new ValueExtractor(value);
         int val = v.value;
-        store(target, val);
+        return val;
     }
 
     @Override
