@@ -1,3 +1,6 @@
+import java.util.ArrayDeque;
+import java.util.Deque;
+
 
 
 public class Second {
@@ -7,37 +10,64 @@ public class Second {
         a = 3;
     } 
     
-    public int val;
-    public int visited;
-    
-    public int traverse(int... graph) {
-        for (int n : graph) {
-            val += visit(n);
+    public static class Range {
+        public final int p;
+        public final int r;
+        
+        public Range(int p, int r) {
+           this.p = p;
+           this.r = r;
         }
-        return val + visited;
     }
     
-    public int visit(int a) {
-        inc();
-        return a * a;
+    public int sort(int[] array) {
+        return sort(array, 0, array.length);
     }
     
-    public int inc() {
-        int b = 3;
-        return ++ visited;
+    public int sort(int[] array, int p, int r) {
+        Deque<Range> parts = new ArrayDeque<Range>();
+        parts.add(range(p, r));
+        
+        while (!parts.isEmpty()) {
+            Range w = parts.poll();
+            if (eligible(w)) {
+                int q = partition(array, w.p, w.r);
+                parts.add(range(w.p, q + 1));
+                parts.add(range(q + 1, w.r));
+            }
+        }
+        return r - p;
     }
     
-    public int args(int a, int b, int c) {
-//        System.out.printf("a=%d, b=%d, c=%d\n", a, b, c);
-        a = 11;
-        b = 21;
-        c = 31;
-        String dupa = "sdfsdf";
-        System.out.println(dupa);
-        int kk = a + b;
-        int d = a +  c;
-//        System.out.printf("a=%d, b=%d, c=%d\n", a, b, c);
-        return kk - a + d;
+    public boolean eligible(Range range) {
+        return range.r - range.p > 1;
     }
-
+    
+    public Range range(int p, int r) {
+        return new Range(p, r);
+    }
+    
+    public int partition(int[] array, int p, int r) {
+        int i = p - 1;
+        int j = r;
+        int mid = array[p];
+        
+        while (i < j) {
+            do { ++ i; } while (array[i] < mid);
+            do { -- j; } while (array[j] > mid);
+            if (i < j) {
+                swap(array, i, j);
+            } else {
+                return j;
+            }
+        }
+        return 0;
+    }
+    
+    public void swap(int[] array, int i, int j) {
+        int tmp = array[i];
+        array[i] = array[j];
+        array[j] = tmp;
+    }
+    
 }

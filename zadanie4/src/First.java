@@ -2,18 +2,18 @@
 
 public class First {
 
+    static int[] a = { 1, 4, 2, 5, 6, 3, 15, 7, 13, 10, 9 };
+    
     public static void main(String[] args) {
         Second s = new Second();
-        System.out.println(s.args(10, 20, 30));
-           
-//        int a = s.traverse(1, 2, 3,  4);
-//        if (a > 3) { 
-//            System.out.println(a); 
-//        } else {
-//            System.out.println("maalo");
+        
+        s.sort(a, 0, a.length);
+//        
+//        for (int n : a) { 
+//            System.out.println(n); 
 //        } 
-//        s = new B();  
-//        s.traverse(1); 
+//        System.out.println(s.f(2, 5));
+
     }
 
 }

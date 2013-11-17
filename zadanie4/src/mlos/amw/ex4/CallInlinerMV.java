@@ -1,5 +1,6 @@
 package mlos.amw.ex4;
 
+import java.io.PrintStream;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -25,6 +26,8 @@ public class CallInlinerMV extends GeneratorAdapter {
     private final ClassNode inlined;
     private final Map<String, MethodNode> methods;
     private final Type inlinedType;
+    
+    private int depth = 0;
 
     public CallInlinerMV(ClassNode inlined, MethodVisitor mv, int acc,
             String name,
@@ -54,8 +57,10 @@ public class CallInlinerMV extends GeneratorAdapter {
     public void visitMethodInsn(int opcode, String owner, String name,
             String desc) {
         if (shouldRewrite(owner, name)) {
+            String fullMethod = String.format("%s/%s:%s", owner, name, desc);
+            
             System.out.printf("Inlining %s/%s:%s\n", owner, name, desc);
-
+//            println("Inlining " + fullMethod);
 //            Label same = new Label();
 //            Label after = new Label();
 
@@ -71,22 +76,19 @@ public class CallInlinerMV extends GeneratorAdapter {
 //            visitLabel(same);
 
             // inline
-            int thisIndex = newLocal(inlinedType);
-
-            Type methodType = Type.getMethodType(desc);
-            Type[] argTypes = methodType.getArgumentTypes();
-            int argc = argTypes.length;
-            int[] args = new int[argc];
-            for (int i = 0; i < argc; ++ i) {
-                args[i] = newLocal(argTypes[i]);
-            }
-            for (int i = argc - 1; i >= 0; -- i) {
-                storeLocal(args[i]);
-            }
-            storeLocal(thisIndex);
+//            int thisIndex = newLocal(inlinedType);
+            ++ depth;
+            int n = depth * 1024;//nextLocal;
+//            storeParams(desc);
+//            storeLocal(thisIndex);
+//            visitVarInsn(inlinedType.getOpcode(Opcodes.ISTORE), n);
             
-            MethodInliner inliner = new MethodInliner(thisIndex, mv, Opcodes.ACC_PUBLIC, name, desc);
-            method.instructions.accept(inliner);
+            LocalVarShifter shifter = new LocalVarShifter(n, this);
+            MethodInliner inliner = new MethodInliner(shifter, name, desc);
+            inliner.visit(method);
+            -- depth;
+//            println("End of " + fullMethod);
+//            method.instructions.accept(inliner);
 //            visitLabel(after);
         } else {
             super.visitMethodInsn(opcode, owner, name, desc);

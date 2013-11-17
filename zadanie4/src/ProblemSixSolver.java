@@ -1,5 +1,4 @@
 
-
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -20,7 +19,8 @@ public class ProblemSixSolver {
         ClassNode inlinedClass = getNode(inlined);
 
         ClassReader reader = new ClassReader(new FileInputStream(input));
-        ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
+        ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_MAXS
+                | ClassWriter.COMPUTE_FRAMES);
 
         ClassVisitor inliner = new CallInliner(inlinedClass, writer);
         reader.accept(inliner, ClassReader.EXPAND_FRAMES);
