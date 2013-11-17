@@ -32,7 +32,8 @@ public class MethodInliner extends GeneratorAdapter {
         if (isVoid) {
             retVar = newLocal(retType);
         }
-        println("Body");
+//        println("Body");
+        node.instructions.resetLabels();
         node.instructions.accept(this);
         
         visitLabel(afterMethod);

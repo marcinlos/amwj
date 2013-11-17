@@ -10,6 +10,7 @@ import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.util.CheckClassAdapter;
 import org.objectweb.asm.util.TraceClassVisitor;
 
 public class ProblemSixSolver {
@@ -20,11 +21,11 @@ public class ProblemSixSolver {
         ClassNode inlinedClass = getNode(inlined);
 
         ClassReader reader = new ClassReader(new FileInputStream(input));
-        ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_MAXS);
+        ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
 
         PrintWriter w = new PrintWriter(System.out);
-        TraceClassVisitor tracer = new TraceClassVisitor(writer, w);
-        ClassVisitor inliner = new CallInliner(inlinedClass, tracer);
+//        CheckClassAdapter tracer = new CheckClassAdapter(writer);
+        ClassVisitor inliner = new CallInliner(inlinedClass, writer);
         try {
             reader.accept(inliner, ClassReader.EXPAND_FRAMES);
         } finally {

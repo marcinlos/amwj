@@ -10,9 +10,9 @@ public class First {
         s.sort(a, 0, a.length);
 //        s.szczyny();
 //        
-//        for (int n : a) { 
-//            System.out.println(n); 
-//        } 
+        for (int n : a) { 
+            System.out.println(n); 
+        } 
 //        System.out.println(s.f(2, 5));
 
     }
