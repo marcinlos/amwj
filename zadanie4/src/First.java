@@ -7,14 +7,22 @@ public class First {
     public static void main(String[] args) {
         Second s = new Second();
         
-        s.sort(a, 0, a.length);
-//        s.szczyny();
-//        
-        for (int n : a) { 
-            System.out.println(n); 
+        int[] a1 = a.clone();
+        s.sort(a1);
+        for (int n : a1) { 
+            System.out.print(n + " "); 
         } 
-//        System.out.println(s.f(2, 5));
+        
+        System.out.println("\n= = = = = = = = = = = = = = = = = = = = = = =");
 
+        int[] a2 = a.clone();
+        Second.Tree t = null;
+        for (int n : a2) {
+            t = s.insert(t, n);
+        }
+        s.morris(t);
+
+        System.out.println();
     }
 
 }
