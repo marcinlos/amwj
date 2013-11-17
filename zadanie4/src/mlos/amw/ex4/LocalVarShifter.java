@@ -7,23 +7,23 @@ import org.objectweb.asm.Opcodes;
 
 public class LocalVarShifter extends MethodVisitor {
 
-    private final int base;
+    private final int shift;
     
     public LocalVarShifter(int base, MethodVisitor mv) {
         super(ASM5, mv);
-        this.base = base;
+        this.shift = base;
     }
 
     @Override
     public void visitVarInsn(int opcode, int index) {
-        super.visitVarInsn(opcode, base + index);
+        super.visitVarInsn(opcode, shift + index);
     }
     
     @Override
     public void visitIntInsn(int opcode, int arg) {
         switch (opcode) {
         case Opcodes.RET: 
-            super.visitIntInsn(opcode, base + arg);
+            super.visitIntInsn(opcode, shift + arg);
             break;
         default:
             super.visitIntInsn(opcode, arg);
@@ -32,7 +32,7 @@ public class LocalVarShifter extends MethodVisitor {
     
     @Override
     public void visitIincInsn(int var, int n) {
-        super.visitIincInsn(base + var, n);
+        super.visitIincInsn(shift + var, n);
     }
     
 }
