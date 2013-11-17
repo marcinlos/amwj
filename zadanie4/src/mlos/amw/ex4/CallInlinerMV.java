@@ -59,7 +59,14 @@ public class CallInlinerMV extends GeneratorAdapter {
         if (shouldRewrite(owner, name)) {
             String fullMethod = String.format("%s/%s:%s", owner, name, desc);
             
-            System.out.printf("Inlining %s/%s:%s\n", owner, name, desc);
+            int k = depth;
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < k; ++ i) {
+                sb.append("  ");
+            }
+            String ind = sb.toString();
+            
+            System.out.printf("%sInlining%s\n", ind, fullMethod);
 //            println("Inlining " + fullMethod);
 //            Label same = new Label();
 //            Label after = new Label();
@@ -86,7 +93,7 @@ public class CallInlinerMV extends GeneratorAdapter {
             LocalVarShifter shifter = new LocalVarShifter(n, this);
             MethodInliner inliner = new MethodInliner(shifter, name, desc);
             inliner.visit(method);
-            -- depth;
+//            -- depth;
 //            println("End of " + fullMethod);
 //            method.instructions.accept(inliner);
 //            visitLabel(after);

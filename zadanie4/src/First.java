@@ -8,6 +8,7 @@ public class First {
         Second s = new Second();
         
         s.sort(a, 0, a.length);
+//        s.szczyny();
 //        
 //        for (int n : a) { 
 //            System.out.println(n); 
