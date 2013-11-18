@@ -22,17 +22,41 @@ class SSCCollector implements Collector {
 
         VM.log("Exploring %d roots", vars.size());
 
+        int ptr = 0;
         for (Entry<String, Integer> var : vars.entrySet()) {
             int address = var.getValue();
             String name = var.getKey();
 
             VM.log("Starting at %s (address: %d)", name, address);
-            int newAddress = traverse(address);
+            int newAddress = move(address);
             var.setValue(newAddress);
+            if (ptr == 0) {
+                ptr = newAddress;
+            }
+        }
+        if (ptr != 0) {
+            while (ptr < heap.high()) {
+                ptr += inspect(ptr);
+            }
+        }
+    }
+    
+    private int inspect(int address) {
+        VM.log("   At %d", address);
+        int header = heap.get(address);
+        int type = Vars.type(header);
+        if (type == Vars.TYPE_T) {
+            int f1 = heap.get(address + 1);
+            int f2 = heap.get(address + 2);
+            heap.put(address + 1, move(f1));
+            heap.put(address + 2, move(f2));
+            return 4;
+        } else {
+            return 2 + heap.get(address + 1);
         }
     }
 
-    private int traverse(int address) {
+    private int move(int address) {
         if (address == 0)
             return 0;
 
@@ -44,7 +68,7 @@ class SSCCollector implements Collector {
             return newAddress;
         }
         int newAddress = copyVar(address, header);
-        heap.put(newAddress, header);
+        makeProxy(address, newAddress);
         VM.log("Copied to %d", newAddress);
         return newAddress;
     }
@@ -67,27 +91,13 @@ class SSCCollector implements Collector {
     private int copySVar(int address) {
         int n = heap.get(address + 1);
         int ptr = heap.alloc(2 + n);
-        heap.memcpy(ptr + 1, address + 1, n + 1);
-        
-        makeProxy(address, ptr);
+        heap.memcpy(ptr, address, n + 2);
         return ptr;
     }
 
     private int copyTVar(int address) {
         int newAddress = heap.alloc(4);
-        int t1 = heap.get(address + 1);
-        int t2 = heap.get(address + 2);
-        int data = heap.get(address + 3);
-        
-        makeProxy(address, newAddress);
-        
-        int newT1 = traverse(t1);
-        int newT2 = traverse(t2);
-
-        heap.put(newAddress + 1, newT1);
-        heap.put(newAddress + 2, newT2);
-        heap.put(newAddress + 3, data);
-
+        heap.memcpy(newAddress, address, 4);
         return newAddress;
     }
 

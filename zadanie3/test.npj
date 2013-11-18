@@ -1,4 +1,4 @@
-VarDeclT a;
+/*VarDeclT a;
 VarDeclT b;
 a.f1 = b;
 a.data = 13;
@@ -6,10 +6,11 @@ b.f1 = a;
 b.data = 19;
 b = NULL;
 HeapAnalyze;
+a = NULL;
 Collect;
-HeapAnalyze;
+HeapAnalyze;*/
 
-/*
+
 VarDeclT root;
 root.data = 666;
 VarDeclT t1;
@@ -31,4 +32,3 @@ root = NULL;
 Collect;
 HeapAnalyze;
 Print msg;
-*/

@@ -63,6 +63,10 @@ public class Heap {
         System.err.printf("[Heap] " + msg + "\n", args);
     }
     
+    public int high() {
+        return base + allocOffset;
+    }
+    
     public int alloc(int size) {
         int remaining = areaSize - allocOffset;
         if (remaining < size) {
